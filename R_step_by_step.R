@@ -50,9 +50,10 @@ whatisthis <- function(xx){
 #' expressions from function arguments.
 
 #+ assignment_operator
+bar <- foo;
 foo <- 500;
 bar <- foo <- 500;
-bar <- foo;
+
 #' It's not a formal rule, it's rarely even written down, but `foo`, `baz`,
 #' `bat`, etc. are throw-away variables people use for testing. If you need more
 #' test variables, just make up three letter ones that start with `b`.
