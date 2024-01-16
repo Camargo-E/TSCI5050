@@ -50,8 +50,9 @@ whatisthis <- function(xx){
 #' expressions from function arguments.
 
 #+ assignment_operator
+
+foo <- 500; 
 bar <- foo;
-foo <- 500;
 bar <- foo <- 500;
 
 #' It's not a formal rule, it's rarely even written down, but `foo`, `baz`,
@@ -358,3 +359,36 @@ whatisthis(perf) # gives class of the variable
 #+ ## multiple comparison
 perf %>% tidy() %>% select(c("p.value")) %>% slice(-1)
 perf %>% tidy() %>% select(c("p.value")) %>% slice(-1) %>% unlist() %>% p.adjust()
+
+boo<-1;
+moo<-boo;
+too<-1;
+for (ii in month.name) {
+ print(ii)
+  substr(tolower(ii),1,3)
+}
+jj<-1
+while (jj <= length(month.name)) {
+  print(month.name[jj])
+  print(substr(tolower(month.name[jj]), 1, 3))
+  jj <- jj + 2
+  }
+
+print(substr(tolower(month.name), 1, 3))
+
+# Function to capitalize first two letters of a string
+capitalize_first_two <- function(input_string) {
+  first_two_letters <- toupper(substr(input_string, 1, 2))
+  rest_of_string <- substr(input_string, 3, nchar(input_string))
+  capitalized_string <- paste(first_two_letters, rest_of_string, sep = "")
+  return(capitalized_string)
+}
+
+# Example usage
+original_string <- month.name
+result <- capitalize_first_two(original_string)
+print(result)
+
+
+
+
