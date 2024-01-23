@@ -1,6 +1,6 @@
 #'---
 #' title: "TSCI 5050: Introduction to Data Science"
-#' author: 'Author One ^1^, Author Two ^1^'
+#' author: 'Elena Camargo'
 #' abstract: |
 #'  | Provide a summary of objectives, study design, setting, participants,
 #'  | sample size, predictors, outcome, statistical analysis, results,
