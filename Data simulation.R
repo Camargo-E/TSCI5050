@@ -47,8 +47,9 @@ panderOptions('table.split.table',Inf); panderOptions('table.split.cells',Inf);
 
 #' # Simulated variables 
 n_patients<-25
-start_date<-as.Date("2023-02-20")
-end_date<-as.Date("2023-08-03")
+start_date<-as.Date("2020-02-20")
+end_date<-as.Date("2020-08-03")
+follow_up<-as.Date("2024-02-06")
 
 #' Example of wrap expression
 data.frame(sample(seq(start_date,end_date,by=1),n_patients,replace = TRUE))
@@ -61,6 +62,7 @@ seq(start_date,end_date,by=1) %>% sample(n_patients,replace=TRUE) %>%
 #' Example of piped expression - period is latest result
 seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE) %>% 
   data.frame(.)
+
 
 
 #' #'Example of debugging 
@@ -80,13 +82,34 @@ seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE) %>%
 1/3
 
 #' Demographics
-Demographcis<-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE) %>% 
+Demographics<-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE) %>% 
   data.frame(
     ID=seq_len(n_patients)
     ,Enrolled=.
-    ,Age=rnorm(n_patients,65,20)) %>% 
-    mutate(DOB=Enrolled-Age)
+    ,Age=rnorm(n_patients,65,20)
+    ,Sex=sample(c("M","F"),n_patients,replace=TRUE)
+    ,Race=sample(c("White","Hispanic or Latino","Black","American Indian,
+                   Aleutian or Eskimo","Hawaiian or Pacific Islander",
+                   "other Asian", "Other","unknown"), 
+                 n_patients,replace=TRUE,prob=c(0.6,0.18,0.13,0.06,0.01,0.01,
+                                                0.02,0))
+    ,Baseline_risk=rnorm(n_patients,0.002,0.0001)
+   
+
+    ) %>% 
+    mutate(DOB=Enrolled-Age
+           ,Final_risk=Baseline_risk*ifelse(Sex=="F",0.8,1)
+           );
+
+Enrolled<-Demographics$Enrolled[10]
+Final_risk<-Demographics$Final_risk[10]
+as.numeric(follow_up-Enrolled) %>% {runif(.)<Final_risk} %>% which()
 
 
+
+#' Progression of cancer and overall survival data
+#Assuming p=50% risk of progression in 12 months, we can calculate the risk per day
+1-(0.5)^(1/365)
+#This frequency (0.00189) is equal to 1 in 500 odds
 
 
