@@ -51,6 +51,11 @@ start_date<-as.Date("2020-02-20")
 end_date<-as.Date("2020-08-03")
 follow_up<-as.Date("2024-02-06")
 
+#' # Functions
+Generate_event<-function(xx,threshold){(runif(xx)<threshold )%>% which() %>% 
+    min() %>% ifelse(is.infinite(.),NA,.)}
+Generate_event(100,.05)
+
 #' Example of wrap expression
 data.frame(sample(seq(start_date,end_date,by=1),n_patients,replace = TRUE))
 
@@ -99,11 +104,19 @@ Demographics<-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE
     ) %>% 
     mutate(DOB=Enrolled-Age
            ,Final_risk=Baseline_risk*ifelse(Sex=="F",0.8,1)
+           ,Day_of_progression=as.numeric(follow_up-Enrolled) %>% 
+             mapply(Generate_event,.,Final_risk)
+           #%>% {which(runif(.)<Final_risk}%>% 
+           #  which() %>% min() %>% ifelse(is.infinite(.), NA,.)
+           # ,ifelse(is.infinite(Day_of_progression),NA,Day_of_progression)
            );
+
+
 
 Enrolled<-Demographics$Enrolled[10]
 Final_risk<-Demographics$Final_risk[10]
-as.numeric(follow_up-Enrolled) %>% {runif(.)<Final_risk} %>% which()
+Day_of_progression<-as.numeric(follow_up-Enrolled) %>% {runif(.)<Final_risk} %>% 
+  which() %>% min()
 
 
 
