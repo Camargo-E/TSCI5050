@@ -24,6 +24,7 @@
 # This part does not show up in your rendered report, only in the script,
 # because we are using regular comments instead of #' comments
 debug <- 0;
+script_seed<-401783
 knitr::opts_chunk$set(
   echo = debug > -1,
   warning = debug > 0,
@@ -32,7 +33,7 @@ knitr::opts_chunk$set(
   attr.output = 'style="max-height: 150px; overflow-y: auto;"'
 )
 
-
+# Libraries ----
 library(ggplot2); # visualization
 library(GGally);
 library(rio);# simple command for importing and exporting
@@ -40,21 +41,24 @@ library(pander); # format tables
 #library(printr); # set limit on number of lines printed
 library(broom); # allows to give clean data set
 library(dplyr); #add dplyr library
+library(survival); #time to event or "survival data"- that occurs over time 
 
 options(max.print=500);
 panderOptions('table.split.table',Inf); panderOptions('table.split.cells',Inf);
 
 
 #' # Simulated variables 
-n_patients<-25
+# Variables ----
+n_patients<-100
 start_date<-as.Date("2020-02-20")
 end_date<-as.Date("2020-08-03")
 follow_up<-as.Date("2024-02-06")
 
 #' # Functions
-Generate_event<-function(xx,threshold){(runif(xx)<threshold )%>% which() %>% 
-    min() %>% ifelse(is.infinite(.),NA,.)}
-Generate_event(100,.05)
+# Generate_event_old<-function(xx,threshold){(runif(xx)<threshold )%>% which() %>% 
+#     min() %>% ifelse(is.infinite(.),NA,.)}
+# 
+# Generate_event(100,.05)
 
 #' Example of wrap expression
 data.frame(sample(seq(start_date,end_date,by=1),n_patients,replace = TRUE))
@@ -86,11 +90,15 @@ seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE) %>%
   }
 1/3
 
+# Demographics data frame ----
 #' Demographics
+set.seed(script_seed)
 Demographics<-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE) %>% 
   data.frame(
     ID=seq_len(n_patients)
     ,Enrolled=.
+    #For 2/27 add a column for individual_end_date_followup that is exactly 2 years after enrolled
+    #HINT: you can add integer to a date
     ,Age=rnorm(n_patients,65,20)
     ,Sex=sample(c("M","F"),n_patients,replace=TRUE)
     ,Race=sample(c("White","Hispanic or Latino","Black","American Indian,
@@ -98,18 +106,24 @@ Demographics<-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE
                    "other Asian", "Other","unknown"), 
                  n_patients,replace=TRUE,prob=c(0.6,0.18,0.13,0.06,0.01,0.01,
                                                 0.02,0))
-    ,Baseline_risk=rnorm(n_patients,0.002,0.0001)
+    ,Baseline_risk=rnorm(n_patients,0.001,0.001) %>% abs()
    
 
     ) %>% 
     mutate(DOB=Enrolled-Age
            ,Final_risk=Baseline_risk*ifelse(Sex=="F",0.8,1)
-           ,Day_of_progression=as.numeric(follow_up-Enrolled) %>% 
-             mapply(Generate_event,.,Final_risk)
+           
+           # ,Day_of_progression=as.numeric(follow_up-Enrolled) %>% 
+             # mapply(Generate_event,.,Final_risk)
            #%>% {which(runif(.)<Final_risk}%>% 
            #  which() %>% min() %>% ifelse(is.infinite(.), NA,.)
            # ,ifelse(is.infinite(Day_of_progression),NA,Day_of_progression)
+           ,Day_of_progression=(rgeom(n=n(), prob=Final_risk)+1)
+           # ,temp_prog_date=Day_of_progression+Enrolled
+           # ,follow_up=follow_up
+           ,Day_of_progression=ifelse(Enrolled+Day_of_progression>follow_up,NA,Day_of_progression)
            );
+survfit(Surv(Day_of_progression)~Sex,data=Demographics) %>% plot()
 
 
 
