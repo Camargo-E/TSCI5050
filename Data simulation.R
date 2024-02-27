@@ -107,21 +107,26 @@ Demographics<-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE
                  n_patients,replace=TRUE,prob=c(0.6,0.18,0.13,0.06,0.01,0.01,
                                                 0.02,0))
     ,Baseline_risk=rnorm(n_patients,0.001,0.001) %>% abs()
+    ,Baseline_death_pre_progression=rnorm(n_patients,0.0001,0.001) %>% abs()
+    ,Baseline_death_post_progression=rnorm(n_patients,0.005,0.001) %>% abs()
    
 
     ) %>% 
     mutate(DOB=Enrolled-Age
            ,Final_risk=Baseline_risk*ifelse(Sex=="F",0.8,1)
-           
-           # ,Day_of_progression=as.numeric(follow_up-Enrolled) %>% 
-             # mapply(Generate_event,.,Final_risk)
-           #%>% {which(runif(.)<Final_risk}%>% 
-           #  which() %>% min() %>% ifelse(is.infinite(.), NA,.)
-           # ,ifelse(is.infinite(Day_of_progression),NA,Day_of_progression)
+           ,Final_death_pre_progression=Baseline_death_pre_progression*ifelse(
+             Sex=="F",0.8,1)
+           ,Final_death_post_progression=Baseline_death_post_progression*ifelse(
+             Sex=="F",0.8,1)
            ,Day_of_progression=(rgeom(n=n(), prob=Final_risk)+1)
-           # ,temp_prog_date=Day_of_progression+Enrolled
-           # ,follow_up=follow_up
-           ,Day_of_progression=ifelse(Enrolled+Day_of_progression>follow_up,NA,Day_of_progression)
+           ,Day_of_progression=ifelse(
+             Enrolled+Day_of_progression>follow_up,NA,Day_of_progression)
+           ,Day_of_death_pre_progression=(
+             rgeom(n=n(), prob=Final_death_pre_progression)+1)
+           ,Day_of_death_post_progression=(
+             Day_of_progression+rgeom(n=n(), prob=Final_death_pre_progression)+1)
+           ,Day_of_death=ifelse(Day_of_death_pre_progression<=Day_of_progression
+                                ,Day_of_death_pre_progression,Day_of_death_post_progression)
            );
 survfit(Surv(Day_of_progression)~Sex,data=Demographics) %>% plot()
 
