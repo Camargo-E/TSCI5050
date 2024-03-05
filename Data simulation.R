@@ -38,7 +38,7 @@ library(ggplot2); # visualization
 library(GGally);
 library(rio);# simple command for importing and exporting
 library(pander); # format tables
-#library(printr); # set limit on number of lines printed
+library(printr); # set limit on number of lines printed
 library(broom); # allows to give clean data set
 library(dplyr); #add dplyr library
 library(survival); #time to event or "survival data"- that occurs over time 
@@ -53,6 +53,8 @@ n_patients<-100
 start_date<-as.Date("2020-02-20")
 end_date<-as.Date("2020-08-03")
 follow_up<-as.Date("2024-02-06")
+Columns_to_keep <-c ('ID','Enrolled','Follow_up','Race','Sex','DOB'
+                     ,'Date_of_progression','Date_of_death')
 
 #' # Functions
 # Generate_event_old<-function(xx,threshold){(runif(xx)<threshold )%>% which() %>% 
@@ -101,43 +103,53 @@ Demographics<-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE
     #HINT: you can add integer to a date
     ,Age=rnorm(n_patients,65,20)
     ,Sex=sample(c("M","F"),n_patients,replace=TRUE)
-    ,Race=sample(c("White","Hispanic or Latino","Black","American Indian,
-                   Aleutian or Eskimo","Hawaiian or Pacific Islander",
-                   "other Asian", "Other","unknown"), 
+    ,Race=sample(c("White","Hispanic or Latino","Black"
+                   ,"American Indian, Aleutian or Eskimo"
+                   ,"Hawaiian or Pacific Islander"
+                   ,"other Asian"
+                   , "Other"
+                   ,"unknown"), 
                  n_patients,replace=TRUE,prob=c(0.6,0.18,0.13,0.06,0.01,0.01,
                                                 0.02,0))
     ,Baseline_risk=rnorm(n_patients,0.001,0.001) %>% abs()
-    ,Baseline_death_pre_progression=rnorm(n_patients,0.0001,0.001) %>% abs()
+    ,Baseline_death_pre_progression=rnorm(n_patients,0.000001,0.001) %>% abs()
     ,Baseline_death_post_progression=rnorm(n_patients,0.005,0.001) %>% abs()
    
 
     ) %>% 
     mutate(DOB=Enrolled-Age
            ,Final_risk=Baseline_risk*ifelse(Sex=="F",0.8,1)
-           ,Final_death_pre_progression=Baseline_death_pre_progression*ifelse(
-             Sex=="F",0.8,1)
-           ,Final_death_post_progression=Baseline_death_post_progression*ifelse(
-             Sex=="F",0.8,1)
+           ,Final_death_pre_progression=Baseline_death_pre_progression*ifelse(Sex=="F",0.8,1)
+           ,Final_death_post_progression=Baseline_death_post_progression*ifelse(Sex=="F",0.8,1)
            ,Day_of_progression=(rgeom(n=n(), prob=Final_risk)+1)
-           ,Day_of_progression=ifelse(
-             Enrolled+Day_of_progression>follow_up,NA,Day_of_progression)
-           ,Day_of_death_pre_progression=(
-             rgeom(n=n(), prob=Final_death_pre_progression)+1)
-           ,Day_of_death_post_progression=(
-             Day_of_progression+rgeom(n=n(), prob=Final_death_pre_progression)+1)
+           ,Day_of_death_pre_progression=(rgeom(n=n(), prob=Final_death_pre_progression)+1)
+           ,Day_of_death_post_progression=(Day_of_progression+rgeom(n=n(), prob=Final_death_pre_progression)+1)
            ,Day_of_death=ifelse(Day_of_death_pre_progression<=Day_of_progression
-                                ,Day_of_death_pre_progression,Day_of_death_post_progression)
+                                ,Day_of_death_pre_progression
+                                ,Day_of_death_post_progression)
+           ,Date_of_progression=Enrolled+Day_of_progression
+           ,Date_of_death=Enrolled+Day_of_death
+           ,Date_of_progression=ifelse(
+             Date_of_progression>pmin(follow_up,Date_of_death),NA,Date_of_progression) %>% as.Date()
+           ,Date_of_death=ifelse(
+             Date_of_death>follow_up,NA,Date_of_death)%>% as.Date()
+           ,Follow_up=follow_up
            );
+
+# Exported Data ----
+export(Demographics[,Columns_to_keep],"Simulated_Data.xlsx")
 survfit(Surv(Day_of_progression)~Sex,data=Demographics) %>% plot()
 
+#' Different ways to subset a data column using subset and which
+#+ Subsetting
+Demographics[Demographics$Date_of_progression > Demographics$Date_of_death,];
+which(Demographics$Date_of_progression > Demographics$Date_of_death);
+Demographics[which(Demographics$Date_of_progression > Demographics$Date_of_death),];
+subset(Demographics,Date_of_progression > Date_of_death);
 
-
-Enrolled<-Demographics$Enrolled[10]
-Final_risk<-Demographics$Final_risk[10]
-Day_of_progression<-as.numeric(follow_up-Enrolled) %>% {runif(.)<Final_risk} %>% 
-  which() %>% min()
-
-
+sum(Demographics$Date_of_progression > Demographics$Date_of_death,na.rm = TRUE)
+mean(Demographics$Date_of_progression > Demographics$Date_of_death,na.rm = TRUE)
+with(Demographics,sum(Date_of_progression > Date_of_death,na.rm = TRUE))
 
 #' Progression of cancer and overall survival data
 #Assuming p=50% risk of progression in 12 months, we can calculate the risk per day
