@@ -37,19 +37,25 @@ library(ggplot2); # visualisation
 library(GGally);
 library(rio);# simple command for importing and exporting
 library(pander); # format tables
-#library(printr); # set limit on number of lines printed
+library(printr); # set limit on number of lines printed
 library(broom); # allows to give clean dataset
 library(dplyr); #add dplyr library
+library(survival);
+library(survminer)
 
 options(max.print=500);
 panderOptions('table.split.table',Inf); panderOptions('table.split.cells',Inf);
+panderOptions('missing','-');
+panderOptions('table.alignment.default','left');
+panderOptions('table.alignment.rownames','right')
+Inputdata<-"Simulated_Data.xlsx"
 
+# Import data ----
 
-#' # Section 1: 
-#' Date Formatting
-#' this is how you convert a string to standard date format
-as.Date("1/22/2024","%m,%d,%Y")
-
-#'# Section 2: Data import
-export(mtcars,"mcars.xlsx")
-Dt <-import("mcars.xlsx")
+#' # Import Data
+#' 
+#' 
+#+ this is where we import data
+dat0<-import(Inputdata)
+dat0
+#pander((dat0))

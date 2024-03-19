@@ -101,7 +101,7 @@ Demographics<-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE
     ,Enrolled=.
     #For 2/27 add a column for individual_end_date_followup that is exactly 2 years after enrolled
     #HINT: you can add integer to a date
-    ,Age=rnorm(n_patients,65,20)
+    ,Age=rnorm(n_patients,65*365.25,20*365.25)
     ,Sex=sample(c("M","F"),n_patients,replace=TRUE)
     ,Race=sample(c("White","Hispanic or Latino","Black"
                    ,"American Indian, Aleutian or Eskimo"
@@ -111,33 +111,37 @@ Demographics<-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE
                    ,"unknown"), 
                  n_patients,replace=TRUE,prob=c(0.6,0.18,0.13,0.06,0.01,0.01,
                                                 0.02,0))
-    ,Baseline_risk=rnorm(n_patients,0.001,0.001) %>% abs()
-    ,Baseline_death_pre_progression=rnorm(n_patients,0.000001,0.001) %>% abs()
-    ,Baseline_death_post_progression=rnorm(n_patients,0.005,0.001) %>% abs()
-   
-
-    ) %>% 
-    mutate(DOB=Enrolled-Age
-           ,Final_risk=Baseline_risk*ifelse(Sex=="F",0.8,1)
-           ,Final_death_pre_progression=Baseline_death_pre_progression*ifelse(Sex=="F",0.8,1)
-           ,Final_death_post_progression=Baseline_death_post_progression*ifelse(Sex=="F",0.8,1)
-           ,Day_of_progression=(rgeom(n=n(), prob=Final_risk)+1)
-           ,Day_of_death_pre_progression=(rgeom(n=n(), prob=Final_death_pre_progression)+1)
-           ,Day_of_death_post_progression=(Day_of_progression+rgeom(n=n(), prob=Final_death_pre_progression)+1)
-           ,Day_of_death=ifelse(Day_of_death_pre_progression<=Day_of_progression
-                                ,Day_of_death_pre_progression
-                                ,Day_of_death_post_progression)
-           ,Date_of_progression=Enrolled+Day_of_progression
-           ,Date_of_death=Enrolled+Day_of_death
-           ,Date_of_progression=ifelse(
-             Date_of_progression>pmin(follow_up,Date_of_death),NA,Date_of_progression) %>% as.Date()
-           ,Date_of_death=ifelse(
-             Date_of_death>follow_up,NA,Date_of_death)%>% as.Date()
-           ,Follow_up=follow_up
-           );
+    #    ,Baseline_risk=rnorm(n_patients,0.005,0.001) %>% abs()
+    #    ,Baseline_death_pre_progression=rnorm(n_patients,0.00001,0.001) %>% abs()
+    #    ,Baseline_death_post_progression=rnorm(n_patients,0.005,0.001) %>% abs()
+    
+    ,Baseline_risk=rnorm(n_patients, 0.005,0.001)%>% abs()
+    ,Baseline_death_pre_progression=rnorm(n_patients, 0.000001,0.00001)%>% abs()
+    ,Baseline_death_post_progression=rnorm(n_patients, 0.005,0.001)%>% abs()
+    
+  ) %>% 
+  mutate(DOB=round(Enrolled-Age)
+         ,Final_risk=Baseline_risk*ifelse(Sex=="F",0.8,1)
+         ,Final_death_pre_progression=Baseline_death_pre_progression*ifelse(Sex=="F",0.8,1)
+         ,Final_death_post_progression=Baseline_death_post_progression*ifelse(Sex=="F",0.8,1)
+         ,Day_of_progression=(rgeom(n=n(), prob=Final_risk)+1)
+         ,Day_of_death_pre_progression=(rgeom(n=n(), prob=Final_death_pre_progression)+1)
+         ,Day_of_death_post_progression=(Day_of_progression+rgeom(n=n(), prob=Final_death_post_progression)+1)
+         ,Day_of_death=ifelse(Day_of_death_pre_progression<=Day_of_progression
+                              ,Day_of_death_pre_progression
+                              ,Day_of_death_post_progression)
+         ,Date_of_progression=Enrolled+Day_of_progression
+         ,Date_of_death=Enrolled+Day_of_death
+         ,Date_of_death0=Date_of_death
+         ,Date_of_progression=ifelse(
+           Date_of_progression>pmin(follow_up,Date_of_death),NA,Date_of_progression) %>% as.Date()
+         ,Follow_up=follow_up
+         ,Date_of_death=ifelse(
+           Date_of_death>Follow_up,NA,Date_of_death)%>% as.Date()
+  );
 
 # Exported Data ----
-export(Demographics[,Columns_to_keep],"Simulated_Data.xlsx")
+export(Demographics[,Columns_to_keep],"Simulated_Data.xlsx",overwrite=TRUE)
 survfit(Surv(Day_of_progression)~Sex,data=Demographics) %>% plot()
 
 #' Different ways to subset a data column using subset and which
