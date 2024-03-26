@@ -50,12 +50,36 @@ panderOptions('table.alignment.default','left');
 panderOptions('table.alignment.rownames','right')
 Inputdata<-"Simulated_Data.xlsx"
 
+# Data Columns
+Data_columns <- c(
+  start='Enrolled',
+  followup='Follow_up',
+  dob='DOB',
+  date1='Date_of_progression',
+  date2='Date_of_death'
+)
+
+Covariates<-c(
+  "Race","Sex"
+)
+
 # Import data ----
 
 #' # Import Data
 #' 
 #' 
 #+ this is where we import data
-dat0<-import(Inputdata)
-dat0
-#pander((dat0))
+dat0<-import(Inputdata) %>% 
+  rename(any_of(Data_columns)) %>% 
+  mutate(age=as.numeric((start-dob)/365.25),
+         maxfollowup=as.numeric(followup-start),
+         censor1=!is.na(date1),
+         censor2=!is.na(date2),
+         #event1 and event2 are days that have elapsed since enrollment
+         #censor is event occurred, if occurred= TRUE, if not =FALSE
+         event2=coalesce(as.numeric(date2-start),maxfollowup),
+         event1=coalesce(as.numeric(date1-start),event2)
+         )
+head(dat0)
+
+fit0<-survfit(Surv(event1,censor1)~Sex,dat0)
