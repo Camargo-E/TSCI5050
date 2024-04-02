@@ -75,6 +75,11 @@ dat0<-import(Inputdata) %>%
          maxfollowup=as.numeric(followup-start),
          censor1=!is.na(date1),
          censor2=!is.na(date2),
+         censor3=case_when(!is.na(date1)~"progressed",
+                           !is.na(date2)~"died",
+                           TRUE~"censored" 
+                             ) %>% factor(levels=c("censored","progressed","died")),
+
          #event1 and event2 are days that have elapsed since enrollment
          #censor is event occurred, if occurred= TRUE, if not =FALSE
          event2=coalesce(as.numeric(date2-start),maxfollowup),
@@ -83,3 +88,17 @@ dat0<-import(Inputdata) %>%
 head(dat0)
 
 fit0<-survfit(Surv(event1,censor1)~Sex,dat0)
+summary(fit0)
+pander(fit0)
+
+#' Bells and whistles plot
+ggsurvplot(fit0,data=dat0,censor.size=10,risk.table=TRUE,conf.int=TRUE,palette=c("pink","limegreen"))
+update(fit0,conf.int=0.9) %>% ggsurvplot(.,data=dat0,censor.size=10,risk.table=TRUE,conf.int=TRUE)
+
+fitcr<-update(fit0,Surv(event1,censor3)~.)
+plot(fitcr,col=c("pink","limegreen","orange","blue"))
+legend("bottomright",legend=c("female progressed","male progressed","female died", "male died"),
+       title="Legend",bty = "n",col=c("hotpink","limegreen","darkorange","blue"),lty=3)
+table(dat0$censor3)
+print(fitcr)
+c()
