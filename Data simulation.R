@@ -47,55 +47,18 @@ options(max.print=500);
 panderOptions('table.split.table',Inf); panderOptions('table.split.cells',Inf);
 
 
-#' # Simulated variables 
+#' # Simulated variables
 # Variables ----
-n_patients<-100
-start_date<-as.Date("2020-02-20")
-end_date<-as.Date("2020-08-03")
-follow_up<-as.Date("2024-02-06")
-Columns_to_keep <-c ('ID','Enrolled','Follow_up','Race','Sex','DOB'
-                     ,'Date_of_progression','Date_of_death')
-
-#' # Functions
-# Generate_event_old<-function(xx,threshold){(runif(xx)<threshold )%>% which() %>% 
-#     min() %>% ifelse(is.infinite(.),NA,.)}
-# 
-# Generate_event(100,.05)
-
-#' Example of wrap expression
-data.frame(sample(seq(start_date,end_date,by=1),n_patients,replace = TRUE))
-
-
-#' Example of piped expression
-seq(start_date,end_date,by=1) %>% sample(n_patients,replace=TRUE) %>% 
-  data.frame
-
-#' Example of piped expression - period is latest result
-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE) %>% 
-  data.frame(.)
-
-
-
-#' #'Example of debugging 
-#' seq(start_date,end_date,by=1) %>% sample(n_patients,replace=TRUE) %>% {
-#'   baz<-.
-#'   browser()
-#'   baz} %>% 
-#'   data.frame
-
-
-#' # Curly brackets
-1/{sqrt(25)->foo; 
-  if(pi>-Inf) {bar<-foo-2} else {bar<-runif(1)}
-  message("hello Elena")
-  bar
-  }
-1/3
-
-# Demographics data frame ----
-#' Demographics
-set.seed(script_seed)
-Demographics<-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE) %>% 
+simdata <- function(start_date=as.Date("2020-02-20")
+                    ,end_date=as.Date("2020-08-03")
+                    ,follow_up=as.Date("2024-02-06")
+                    ,Columns_to_keep =c ('ID','Enrolled','Follow_up','Race','Sex','DOB'
+                                         ,'Date_of_progression','Date_of_death')
+                    
+                    ,n_patients=100
+                    #SaveTo
+                    ,Saveto = ''
+){Demographics<-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE) %>% 
   data.frame(
     ID=seq_len(n_patients)
     ,Enrolled=.
@@ -139,21 +102,76 @@ Demographics<-seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE
          ,Date_of_death=ifelse(
            Date_of_death>Follow_up,NA,Date_of_death)%>% as.Date()
   );
+if(!missing(Saveto)){export(Demographics[,Columns_to_keep]
+                            ,Saveto,overwrite=TRUE)}
+Demographics[,Columns_to_keep]
+}
+
+#debug(simdata)
+
+#n_patients<-100
+#start_date<-as.Date("2020-02-20")
+#end_date<-as.Date("2020-08-03")
+#follow_up<-as.Date("2024-02-06")
+#Columns_to_keep <-c ('ID','Enrolled','Follow_up','Race','Sex','DOB'
+#                     ,'Date_of_progression','Date_of_death')
+
+#' # Functions
+# Generate_event_old<-function(xx,threshold){(runif(xx)<threshold )%>% which() %>% 
+#     min() %>% ifelse(is.infinite(.),NA,.)}
+# 
+# Generate_event(100,.05)
+
+#' Example of wrap expression
+#data.frame(sample(seq(start_date,end_date,by=1),n_patients,replace = TRUE))
+
+
+#' Example of piped expression
+#seq(start_date,end_date,by=1) %>% sample(n_patients,replace=TRUE) %>% 
+ # data.frame
+
+#' Example of piped expression - period is latest result
+#seq(start_date,end_date,by=1) %>% sample(.,n_patients,replace=TRUE) %>% 
+ # data.frame(.)
+
+
+
+#' #'Example of debugging 
+#' seq(start_date,end_date,by=1) %>% sample(n_patients,replace=TRUE) %>% {
+#'   baz<-.
+#'   browser()
+#'   baz} %>% 
+#'   data.frame
+
+
+#' # Curly brackets
+1/{sqrt(25)->foo; 
+  if(pi>-Inf) {bar<-foo-2} else {bar<-runif(1)}
+  message("hello Elena")
+  bar
+}
+1/3
+
+# Demographics data frame ----
+#' Demographics
+set.seed(script_seed)
+
+Demog<-simdata(Saveto='Simulated_Data.xlsx')
 
 # Exported Data ----
-export(Demographics[,Columns_to_keep],"Simulated_Data.xlsx",overwrite=TRUE)
-survfit(Surv(Day_of_progression)~Sex,data=Demographics) %>% plot()
+#export(Demographics[,Columns_to_keep],"Simulated_Data.xlsx",overwrite=TRUE)
+#survfit(Surv(Day_of_progression)~Sex,data=Demog) %>% plot()
 
 #' Different ways to subset a data column using subset and which
 #+ Subsetting
-Demographics[Demographics$Date_of_progression > Demographics$Date_of_death,];
-which(Demographics$Date_of_progression > Demographics$Date_of_death);
-Demographics[which(Demographics$Date_of_progression > Demographics$Date_of_death),];
-subset(Demographics,Date_of_progression > Date_of_death);
-
-sum(Demographics$Date_of_progression > Demographics$Date_of_death,na.rm = TRUE)
-mean(Demographics$Date_of_progression > Demographics$Date_of_death,na.rm = TRUE)
-with(Demographics,sum(Date_of_progression > Date_of_death,na.rm = TRUE))
+# Demographics[Demographics$Date_of_progression > Demographics$Date_of_death,];
+# which(Demographics$Date_of_progression > Demographics$Date_of_death);
+# Demographics[which(Demographics$Date_of_progression > Demographics$Date_of_death),];
+# subset(Demographics,Date_of_progression > Date_of_death);
+# 
+# sum(Demographics$Date_of_progression > Demographics$Date_of_death,na.rm = TRUE)
+# mean(Demographics$Date_of_progression > Demographics$Date_of_death,na.rm = TRUE)
+# with(Demographics,sum(Date_of_progression > Date_of_death,na.rm = TRUE))
 
 #' Progression of cancer and overall survival data
 #Assuming p=50% risk of progression in 12 months, we can calculate the risk per day

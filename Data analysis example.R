@@ -95,10 +95,16 @@ pander(fit0)
 ggsurvplot(fit0,data=dat0,censor.size=10,risk.table=TRUE,conf.int=TRUE,palette=c("pink","limegreen"))
 update(fit0,conf.int=0.9) %>% ggsurvplot(.,data=dat0,censor.size=10,risk.table=TRUE,conf.int=TRUE)
 
+
+#' # Competing risks
 fitcr<-update(fit0,Surv(event1,censor3)~.)
 plot(fitcr,col=c("pink","limegreen","orange","blue"))
 legend("bottomright",legend=c("female progressed","male progressed","female died", "male died"),
        title="Legend",bty = "n",col=c("hotpink","limegreen","darkorange","blue"),lty=3)
 table(dat0$censor3)
 print(fitcr)
+
+#' # Competing risks survminor
+ggcompetingrisks(fitcr,data=dat0) #,censor.size=10,risk.table=TRUE,conf.int=TRUE)
+
 c()
