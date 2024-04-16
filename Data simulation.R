@@ -151,12 +151,22 @@ Demographics[,Columns_to_keep]
   bar
 }
 1/3
+# foo<-import("~/../Desktop/Elena data.xlsx",which="Readiness") %>% 
+#   mutate(intcol=sample(1L:100L,n(),replace=TRUE))
+# bar<-explore::describe(foo)
+# 
+# sapply(foo,function(xx){all(na.omit(xx==as.integer(xx)))})
+# 
+# simlongitudinaldata<-function(){
+#   browser()
+# }
 
 # Demographics data frame ----
 #' Demographics
 set.seed(script_seed)
 
-Demog<-simdata(Saveto='Simulated_Data.xlsx')
+Control<-simdata(Saveto='Control.xlsx')
+Treatment1<-simdata(Saveto='Treatment1.xlsx')
 
 # Exported Data ----
 #export(Demographics[,Columns_to_keep],"Simulated_Data.xlsx",overwrite=TRUE)

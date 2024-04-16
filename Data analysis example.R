@@ -48,7 +48,10 @@ panderOptions('table.split.table',Inf); panderOptions('table.split.cells',Inf);
 panderOptions('missing','-');
 panderOptions('table.alignment.default','left');
 panderOptions('table.alignment.rownames','right')
-Inputdata<-"Simulated_Data.xlsx"
+
+# Variables----
+Inputdata<-c(treat1="Treatment1.xlsx",control="Control.xlsx")
+
 
 # Data Columns
 Data_columns <- c(
@@ -63,13 +66,8 @@ Covariates<-c(
   "Race","Sex"
 )
 
-# Import data ----
 
-#' # Import Data
-#' 
-#' 
-#+ this is where we import data
-dat0<-import(Inputdata) %>% 
+datapipeline<- . %>% import %>% 
   rename(any_of(Data_columns)) %>% 
   mutate(age=as.numeric((start-dob)/365.25),
          maxfollowup=as.numeric(followup-start),
@@ -85,6 +83,16 @@ dat0<-import(Inputdata) %>%
          event2=coalesce(as.numeric(date2-start),maxfollowup),
          event1=coalesce(as.numeric(date1-start),event2)
          )
+
+# Import data ----
+
+#' # Import Data
+#' 
+#' 
+#+ this is where we import data
+
+dat0<-sapply(Inputdata,datapipeline,simplify=F) %>% bind_rows(.id="groupdata")
+
 head(dat0)
 
 fit0<-survfit(Surv(event1,censor1)~Sex,dat0)
