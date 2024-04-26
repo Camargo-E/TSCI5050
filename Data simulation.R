@@ -32,6 +32,13 @@ knitr::opts_chunk$set(
   class.output = "scroll-20",
   attr.output = 'style="max-height: 150px; overflow-y: auto;"'
 )
+Synthpopinput<-"~/../Desktop/Elena data.xlsx"
+
+#Defining a function:----
+
+#functionname <- function(functionargument='value'){ CODE }
+#running a function:
+#functionname(functionargument='value')
 
 # Libraries ----
 library(ggplot2); # visualization
@@ -42,6 +49,7 @@ library(printr); # set limit on number of lines printed
 library(broom); # allows to give clean data set
 library(dplyr); #add dplyr library
 library(survival); #time to event or "survival data"- that occurs over time 
+library(synthpop);#simulate data 
 
 options(max.print=500);
 panderOptions('table.split.table',Inf); panderOptions('table.split.cells',Inf);
@@ -149,6 +157,7 @@ Demographics[,Columns_to_keep]
   if(pi>-Inf) {bar<-foo-2} else {bar<-runif(1)}
   message("hello Elena")
   bar
+  
 }
 1/3
 # foo<-import("~/../Desktop/Elena data.xlsx",which="Readiness") %>% 
@@ -188,4 +197,18 @@ Treatment1<-simdata(Saveto='Treatment1.xlsx')
 1-(0.5)^(1/365)
 #This frequency (0.00189) is equal to 1 in 500 odds
 
+#Synthpop package ----
+#' ## SynthPop package
+ 
+Sampledata<-list()
+for (xx in readxl::excel_sheets(Synthpopinput)[1:2]){
+  print(xx)
+  Sampledata[[xx]]<-import(Synthpopinput,which = xx) %>% subset(!is.na(name)) %>% 
+#    select(!any_of('Comments Comments')) %>% 
+    syn.strata('name',minstratumsize=2) %>% {.$syn}
+  
+}
 
+synGPS<-syn.strata(Sampledata$GPS,'name',minstratumsize=10)
+summary(synGPS)
+compare(synGPS$syn,Sampledata$GPS)
