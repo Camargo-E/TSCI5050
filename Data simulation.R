@@ -211,4 +211,5 @@ for (xx in readxl::excel_sheets(Synthpopinput)[1:2]){
 
 synGPS<-syn.strata(Sampledata$GPS,'name',minstratumsize=10)
 summary(synGPS)
-compare(synGPS$syn,Sampledata$GPS)
+#compare(synGPS$syn,Sampledata$GPS)
+compare(synGPS,Sampledata)
