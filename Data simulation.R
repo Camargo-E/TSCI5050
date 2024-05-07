@@ -32,7 +32,7 @@ knitr::opts_chunk$set(
   class.output = "scroll-20",
   attr.output = 'style="max-height: 150px; overflow-y: auto;"'
 )
-Synthpopinput<-"~/../Desktop/Elena data.xlsx"
+Synthpopinput<-"Elena data.xlsx"
 
 #Defining a function:----
 
@@ -201,15 +201,18 @@ Treatment1<-simdata(Saveto='Treatment1.xlsx')
 #' ## SynthPop package
  
 Sampledata<-list()
-for (xx in readxl::excel_sheets(Synthpopinput)[1:2]){
+for (xx in readxl::excel_sheets(Synthpopinput)){
   print(xx)
   Sampledata[[xx]]<-import(Synthpopinput,which = xx) %>% subset(!is.na(name)) %>% 
-#    select(!any_of('Comments Comments')) %>% 
-    syn.strata('name',minstratumsize=2) %>% {.$syn}
+    select(!any_of('Comments Comments')) %>% 
+    syn.strata('name',minstratumsize=2) %>% {.$syn} %>% 
+    arrange_at(.,intersect(c('name','StudyDay','date'),names(.)))
   
 }
 
-synGPS<-syn.strata(Sampledata$GPS,'name',minstratumsize=10)
-summary(synGPS)
+export(Sampledata,'Elena syndata.xlsx')
+
+synGPS<-import(Synthpopinput,which="GPS")
 #compare(synGPS$syn,Sampledata$GPS)
 compare(synGPS,Sampledata)
+
